@@ -1,0 +1,25 @@
+name: Terraform Unlock
+
+on:
+  workflow_dispatch:
+
+jobs:
+  unlock:
+    runs-on: ubuntu-latest
+
+    env:
+      TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.14.3
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Force unlock
+        run: terraform force-unlock -force 4b772345-e2bc-7fb1-57f5-51101aca18e2
