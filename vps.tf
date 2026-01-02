@@ -4,6 +4,10 @@ terraform {
       source  = "hashicorp/aws"
       version = "6.27.0"
     }
+    cloudflare = {
+      source  = "cloudflare/cloudflare"
+      version = "~> 5"
+    }
   }
 
   cloud {
@@ -34,7 +38,7 @@ module "ws_sg" {
       from_port   = 22
       to_port     = 22
       protocol    = "tcp"
-      cidr_blocks = "49.37.135.134/32"
+      cidr_blocks = "0.0.0.0/0"
       description = "SSH"
     },
     {
