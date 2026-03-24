@@ -1,0 +1,53 @@
+- hosts: web
+  become: yes
+
+  vars:
+    tls_cert_path: /tmp/cert.pem   # or passed via --extra-vars
+    tls_key_path: /tmp/key.pem
+
+  tasks:
+    - name: Ensure nginx is installed
+      package:
+        name: nginx
+        state: present
+
+    - name: Ensure nginx is enabled and started
+      service:
+        name: nginx
+        enabled: true
+        state: started
+
+    - name: Ensure SSL directory exists
+      file:
+        path: /etc/nginx/ssl
+        state: directory
+        owner: root
+        group: root
+        mode: 0700
+
+    - name: Install cert
+      copy:
+        src: "{{ tls_cert_path }}"
+        dest: /etc/nginx/ssl/cert.pem
+        mode: 0600
+      notify: Reload nginx
+
+    - name: Install key
+      copy:
+        src: "{{ tls_key_path }}"
+        dest: /etc/nginx/ssl/key.pem
+        mode: 0600
+      notify: Reload nginx
+
+    - name: Deploy nginx server config
+      template:
+        src: nginx.conf.j2
+        dest: /etc/nginx/conf.d/pranavdumpa.conf
+        mode: 0644
+      notify: Reload nginx
+
+  handlers:
+    - name: Reload nginx
+      service:
+        name: nginx
+        state: reloaded
