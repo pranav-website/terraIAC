@@ -5,7 +5,7 @@ variable "CLOUDFLARE_GLOBAL_API_TOKEN" {
 }
 
 variable "CLOUDFLARE_EMAIL" {
-  description = "Cloudflare Global API token"
+  description = "Cloudflare Global API email"
   type        = string
   sensitive   = true
 }
@@ -48,5 +48,4 @@ resource "local_sensitive_file" "origin_key" {
   filename = "${path.module}/origin.key"
   content  = tls_private_key.origin.private_key_pem
 }
-
 
