@@ -39,13 +39,12 @@ resource "cloudflare_origin_ca_certificate" "origin" {
   request_type = "origin-rsa"
 }
 
-resource "local_sensitive_file" "origin_cert" {
-  filename = "${path.module}/origin.crt"
-  content  = cloudflare_origin_ca_certificate.origin.certificate
+output "origin_cert_pem" {
+  value     = cloudflare_origin_ca_certificate.origin.certificate
+  sensitive = true
 }
 
-resource "local_sensitive_file" "origin_key" {
-  filename = "${path.module}/origin.key"
-  content  = tls_private_key.origin.private_key_pem
+output "origin_key_pem" {
+  value     = tls_private_key.origin.private_key_pem
+  sensitive = true
 }
-
