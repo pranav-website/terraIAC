@@ -140,6 +140,14 @@ jobs:
       - name: Capture EC2 public IP
         id: terraform_outputs
         run: echo "public_ip=$(terraform output -raw public_ip)" >> "$GITHUB_OUTPUT"
+      
+      # necessary because the cert and key are generated in Terraform cloud VM (free up to 500 resources) 
+      # and we need to pass them to Ansible
+      - name: Write origin cert and key
+        run: |
+          terraform output -raw origin_cert_pem > origin.crt
+          terraform output -raw origin_key_pem > origin.key
+          chmod 600 origin.key
 
       - name: Setup SSH key
         run: |
