@@ -106,6 +106,7 @@ This is the deployment flow implied by the code today:
   - `CLOUDFLARE_EMAIL`
 - Terraform Cloud access is expected as the GitHub Actions secret `TF_API_TOKEN`.
 - SSH access is expected as the GitHub Actions secret `EC2_SSH_KEY`.
+  Store `EC2_SSH_KEY` as the base64-encoded contents of the EC2 private key file so CI does not depend on pasted multi-line key formatting.
 
 ### Sensitive files generated or expected locally
 
