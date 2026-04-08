@@ -14,6 +14,8 @@ permissions:
 env:
   TF_VAR_CLOUDFLARE_GLOBAL_API_TOKEN: ${{ secrets.CLOUDFLARE_GLOBAL_API_TOKEN }}
   TF_VAR_CLOUDFLARE_EMAIL: ${{ secrets.CLOUDFLARE_EMAIL }}
+  TF_VAR_CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+  TF_VAR_CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
   EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
 
 jobs:
@@ -24,15 +26,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Debug network
-        run: |
-          nslookup api.cloudflare.com
-          curl -I https://api.cloudflare.com/client/v4/user/tokens/verify
-
-      - name: Debug env
-        run: |
-          env | grep TF_VAR
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -85,15 +78,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Debug network
-        run: |
-          nslookup api.cloudflare.com
-          curl -I https://api.cloudflare.com/client/v4/user/tokens/verify
-
-      - name: Debug env
-        run: |
-          env | grep TF_VAR
-
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
@@ -141,7 +125,8 @@ jobs:
         id: terraform_outputs
         run: echo "public_ip=$(terraform output -raw public_ip)" >> "$GITHUB_OUTPUT"
       
-      # necessary because the cert and key are generated in Terraform cloud VM (free up to 500 resources) 
+      # necessary because the cert and key are generated in Terraform cloud VM (free up to 500 resources)
+      # which means that they aren't available in the GitHub runner until we explicitly output them from Terraform and write them to files, 
       # and we need to pass them to Ansible
       - name: Write origin cert and key
         run: |
@@ -160,6 +145,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ansible
 
+      # update inv since EC2 IP changes every time
       - name: Generate Ansible inventory
         run: |
           cat > inventory.runtime.ini <<EOF
@@ -167,6 +153,7 @@ jobs:
           ${{ steps.terraform_outputs.outputs.public_ip }} ansible_user=ec2-user ansible_ssh_private_key_file=~/.ssh/id_rsa
           EOF
 
+      # necessary to avoid the interactive prompt about connecting to new host
       - name: Add EC2 host to known_hosts
         run: ssh-keyscan -H "${{ steps.terraform_outputs.outputs.public_ip }}" >> ~/.ssh/known_hosts
 
