@@ -11,11 +11,17 @@ variable "CLOUDFLARE_EMAIL" {
   sensitive   = true
 }
 
-variable "CLOUDFLARE_ACCOUNT_ID" {
-  description = "Cloudflare Account ID"
+variable "CLOUDFLARE_ZONE_ID" {
   type        = string
+  description = "Cloudflare Zone ID for pranavdumpa.win, can be found in Cloudflare dashboard"
   sensitive   = true
 }
+
+# variable "CLOUDFLARE_ACCOUNT_ID" {
+#   description = "Cloudflare Account ID"
+#   type        = string
+#   sensitive   = true
+# }
 
 provider "cloudflare" {
   email   = var.CLOUDFLARE_EMAIL
@@ -30,12 +36,6 @@ provider "cloudflare" {
 #   name = "pranavdumpa.win"
 #   type = "full"
 # }
-
-variable "cloudflare_zone_id" {
-  type        = string
-  description = "Cloudflare Zone ID for pranavdumpa.win, can be found in Cloudflare dashboard"
-  sensitive   = true
-}
 
 resource "tls_private_key" "origin" {
   algorithm = "RSA"
@@ -62,7 +62,7 @@ resource "cloudflare_origin_ca_certificate" "origin" {
 }
 
 resource "cloudflare_dns_record" "cf_to_ec2_A_record" {
-  zone_id = var.cloudflare_zone_id
+  zone_id = var.CLOUDFLARE_ZONE_ID
   name    = "@"
   content = aws_instance.web.public_ip
   type    = "A"
@@ -71,7 +71,7 @@ resource "cloudflare_dns_record" "cf_to_ec2_A_record" {
 }
 
 resource "cloudflare_dns_record" "www_cf_to_main_cname_record" {
-  zone_id = var.cloudflare_zone_id
+  zone_id = var.CLOUDFLARE_ZONE_ID
   name    = "www"
   content = "pranavdumpa.win"
   type    = "CNAME"
