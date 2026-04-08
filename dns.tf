@@ -32,9 +32,9 @@ provider "cloudflare" {
 # }
 
 variable "cloudflare_zone_id" {
-  type = string
+  type        = string
   description = "Cloudflare Zone ID for pranavdumpa.win, can be found in Cloudflare dashboard"
-  sensitive = true
+  sensitive   = true
 }
 
 resource "tls_private_key" "origin" {
