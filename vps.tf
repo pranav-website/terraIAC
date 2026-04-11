@@ -99,7 +99,7 @@ resource "aws_instance" "web" {
 }
 
 output "public_ip" {
-  value = aws_instance.web.public_ip
+  value     = aws_instance.web.public_ip
   sensitive = true
 }
 
@@ -118,7 +118,7 @@ resource "aws_iam_role" "github_terraform" {
         Condition = {
           StringEquals = {
             "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com" # audience val set by Github
-            "token.actions.githubusercontent.com:sub" = [ # subject: in this case id of caller
+            "token.actions.githubusercontent.com:sub" = [                   # subject: in this case id of caller
               "repo:pranav-website/terraIAC:ref:refs/heads/main",
               "repo:pranav-website/terraIAC:pull_request"
             ]
