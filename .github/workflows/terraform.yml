@@ -123,6 +123,7 @@ jobs:
 
       - name: Capture EC2 public IP
         id: terraform_outputs
+        # $GITHUB_OUTPUT is a special file and will be associated with this step for later
         run: echo "public_ip=$(terraform output -raw public_ip)" >> "$GITHUB_OUTPUT"
       
       # necessary because the cert and key are generated in Terraform cloud VM (free up to 500 resources)

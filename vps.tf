@@ -100,10 +100,42 @@ resource "aws_instance" "web" {
 
 output "public_ip" {
   value = aws_instance.web.public_ip
+  sensitive = true
 }
 
 resource "aws_iam_role" "github_terraform" {
   name = "github-terraform"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = { # who is assuming? Github OIDC provider.
+          Federated = aws_iam_openid_connect_provider.github.arn
+        }
+        Action = "sts:AssumeRoleWithWebIdentity" # assume role given a web identity (OIDC) token
+        Condition = {
+          StringEquals = {
+            "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com" # audience val set by Github
+            "token.actions.githubusercontent.com:sub" = [ # subject: in this case id of caller
+              "repo:pranav-website/terraIAC:ref:refs/heads/main",
+              "repo:pranav-website/terraIAC:pull_request"
+            ]
+          }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "terraform_admin" {
+  role       = aws_iam_role.github_terraform.name
+  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
+}
+
+resource "aws_iam_role" "github_terraform_readonly" {
+  name = "github-terraform-readonly"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -118,8 +150,7 @@ resource "aws_iam_role" "github_terraform" {
           StringEquals = {
             "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
             "token.actions.githubusercontent.com:sub" = [
-              "repo:pranav-website/terraIAC:ref:refs/heads/main",
-              "repo:pranav-website/terraIAC:pull_request"
+              "repo:pranav-website/sscode:ref:refs/heads/main",
             ]
           }
         }
@@ -128,7 +159,21 @@ resource "aws_iam_role" "github_terraform" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "terraform_admin" {
-  role       = aws_iam_role.github_terraform.name
-  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
+data "aws_iam_policy_document" "ec2-list-policy" {
+  statement {
+    effect    = "Allow"
+    actions   = ["ec2:Describe*", "ec2:Get*", "ec2:List*"]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_policy" "ec2-list-policy" {
+  name        = "EC2ListPolicy"
+  description = "Policy to allow listing EC2 instances"
+  policy      = data.aws_iam_policy_document.ec2-list-policy.json
+}
+
+resource "aws_iam_role_policy_attachment" "ec2-list-policy-attach" {
+  role       = aws_iam_role.github_terraform_readonly.name
+  policy_arn = aws_iam_policy.ec2-list-policy.arn
 }

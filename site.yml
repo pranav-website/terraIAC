@@ -14,6 +14,23 @@
         group: ec2-user
         mode: 0775
 
+    # keeping these in case our ip gets scanned since our ingress allows any ip
+    - name: Disable SSH password auth
+      lineinfile:
+        path: /etc/ssh/sshd_config # path to check
+        regexp: '^#?PasswordAuthentication' # regex to find the line, whether it's commented out or not
+        line: 'PasswordAuthentication no' # the line to replace it with (uncommented and set to no)
+        validate: /usr/sbin/sshd -t -f %s # %s gets replaced with path to temp file
+      notify: Restart sshd # only triggered if something changes
+
+    - name: Disable root SSH login
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PermitRootLogin'
+        line: 'PermitRootLogin no'
+        validate: /usr/sbin/sshd -t -f %s
+      notify: Restart sshd
+
     - name: Ensure nginx is installed
       package:
         name: nginx
@@ -60,3 +77,8 @@
       service:
         name: nginx
         state: reloaded
+
+    - name: Restart sshd
+      service:
+        name: sshd
+        state: restarted
