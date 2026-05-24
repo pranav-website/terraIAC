@@ -134,8 +134,8 @@ resource "aws_iam_role_policy_attachment" "terraform_admin" {
   policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
 }
 
-resource "aws_iam_role" "github_terraform_readonly" {
-  name = "github-terraform-readonly"
+resource "aws_iam_role" "github_sscode_deploy" {
+  name = "github-sscode-deploy"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -159,21 +159,25 @@ resource "aws_iam_role" "github_terraform_readonly" {
   })
 }
 
-data "aws_iam_policy_document" "ec2-list-policy" {
+data "aws_iam_policy_document" "github_sscode_deploy" {
   statement {
     effect    = "Allow"
-    actions   = ["ec2:Describe*", "ec2:Get*", "ec2:List*"]
+    actions   = ["ec2:DescribeInstances"]
     resources = ["*"]
   }
 }
 
-resource "aws_iam_policy" "ec2-list-policy" {
-  name        = "EC2ListPolicy"
-  description = "Policy to allow listing EC2 instances"
-  policy      = data.aws_iam_policy_document.ec2-list-policy.json
+resource "aws_iam_policy" "github_sscode_deploy" {
+  name        = "GitHubSscodeDeployPolicy"
+  description = "Allows the sscode GitHub Actions deploy workflow to discover the EC2 host."
+  policy      = data.aws_iam_policy_document.github_sscode_deploy.json
 }
 
-resource "aws_iam_role_policy_attachment" "ec2-list-policy-attach" {
-  role       = aws_iam_role.github_terraform_readonly.name
-  policy_arn = aws_iam_policy.ec2-list-policy.arn
+resource "aws_iam_role_policy_attachment" "github_sscode_deploy" {
+  role       = aws_iam_role.github_sscode_deploy.name
+  policy_arn = aws_iam_policy.github_sscode_deploy.arn
+}
+
+output "github_sscode_deploy_role_arn" {
+  value = aws_iam_role.github_sscode_deploy.arn
 }
